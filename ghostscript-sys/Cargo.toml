@@ -1,0 +1,13 @@
+[package]
+name = "ghostscript-sys"
+description = "Raw FFI bindings for the Ghostscript PostScript interpreter library"
+version = "0.1.0"
+authors = ["Alex Belykh <albel727@ngs.ru>"]
+license = "AGPL-3.0-or-later"
+keywords = ["ghostscript", "postscript", "pdf"]
+categories = ["external-ffi-bindings", "rendering::data-formats"]
+repository = "https://github.com/albel727/rust-ghostscript"
+readme = "README.md"
+build = "build.rs"
+links = "ghostscript"
+include = ["/src/**/*", "/Cargo.toml", "/build.rs", "/*.md", "/LICENSE*.txt"]

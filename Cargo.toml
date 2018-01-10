@@ -1,0 +1,2 @@
+[workspace]
+members = ["ghostscript-rs", "ghostscript-sys"]
