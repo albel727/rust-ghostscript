@@ -217,7 +217,7 @@ impl<T> GhostscriptBuilder<T> {
     }
 
     #[cfg_attr(feature = "cargo-clippy", allow(let_unit_value))]
-    pub fn build<Q: ::instance::CallbackSafe<Target = T>>(&self, mut user_data: Q) -> BuilderResult<Q> {
+    pub fn build<Q: ::callback::CallbackSafe<Target = T>>(&self, mut user_data: Q) -> BuilderResult<Q> {
         let lock = ::instance::lock::get_lock();
 
         let mut instance = ::std::ptr::null_mut();

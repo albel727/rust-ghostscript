@@ -14,8 +14,6 @@ pub(crate) mod lock_mutex;
 #[cfg(feature = "synchronized")]
 pub(crate) use self::lock_mutex as lock;
 
-pub use callback::{CallbackSafe, NoCallback};
-
 #[derive(Debug)]
 pub struct Ghostscript<T> {
     #[allow(unused)] pub(crate) lock: lock::LockType,
