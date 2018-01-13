@@ -9,12 +9,14 @@ use std::os::raw::c_char;
 // Data chunk delivered per call will be at most this size.
 const MAX_BYTES_PER_WRITE: usize = 65_535;
 
+#[derive(Debug)]
 enum State<'a, T: 'a> {
     Running(&'a mut Ghostscript<T>),
     Completed(InterpreterResult),
     Closed,
 }
 
+#[derive(Debug)]
 pub struct GhostscriptStream<'a, T: 'a>(State<'a, T>);
 
 impl<'a, T: 'a> ::std::io::Write for GhostscriptStream<'a, T> {
@@ -26,7 +28,7 @@ impl<'a, T: 'a> ::std::io::Write for GhostscriptStream<'a, T> {
                 let mut pexit_code: PostscriptExitCode = 0;
                 let err = unsafe {
                     gs_sys::ffi::gsapi_run_string_continue(
-                        instance.as_raw_instance() as *mut _,
+                        instance.as_raw_instance(),
                         buf.as_ptr() as *const c_char,
                         write_len as _,
                         0,
@@ -65,7 +67,7 @@ impl<'a, T: 'a> ::std::io::Write for GhostscriptStream<'a, T> {
 impl<'a, T> GhostscriptStream<'a, T> {
     pub(crate) fn new(instance: &'a mut Ghostscript<T>) -> Result<Self, InterpreterResult> {
         let mut pexit_code: PostscriptExitCode = 0;
-        let err = unsafe { gs_sys::ffi::gsapi_run_string_begin(instance.as_raw_instance() as *mut _, 0, &mut pexit_code) };
+        let err = unsafe { gs_sys::ffi::gsapi_run_string_begin(instance.as_raw_instance(), 0, &mut pexit_code) };
         if err != gs_sys::GS_OK {
             return Err(InterpreterResult(ErrCode(err), pexit_code));
         }
@@ -84,7 +86,7 @@ impl<'a, T> GhostscriptStream<'a, T> {
         match ::std::mem::replace(&mut self.0, State::Closed) {
             State::Running(ref mut instance) => {
                 let mut pexit_code: PostscriptExitCode = 0;
-                let err = unsafe { gs_sys::ffi::gsapi_run_string_end(instance.as_raw_instance() as *mut _, 0, &mut pexit_code) };
+                let err = unsafe { gs_sys::ffi::gsapi_run_string_end(instance.as_raw_instance(), 0, &mut pexit_code) };
 
                 InterpreterResult(ErrCode(err), pexit_code)
             },

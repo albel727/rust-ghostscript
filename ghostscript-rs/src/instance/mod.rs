@@ -14,18 +14,20 @@ pub(crate) mod lock_mutex;
 #[cfg(feature = "synchronized")]
 pub(crate) use self::lock_mutex as lock;
 
+pub use callback::{CallbackSafe, NoCallback};
+
 #[derive(Debug)]
 pub struct Ghostscript<T> {
     #[allow(unused)] pub(crate) lock: lock::LockType,
 
     pub(crate) instance: *mut gs_sys::GsRawInstance,
     pub(crate) initialized: bool,
-    pub(crate) user_data: Option<Box<T>>,
+    pub(crate) user_data: Option<T>,
     pub(crate) display_callback: Option<Arc<gs_sys::display::DisplayCallback>>,
 }
 
 impl<T> Ghostscript<T> {
-    pub fn into_inner(mut self) -> Box<T> {
+    pub fn into_inner(mut self) -> T {
         self.user_data.take().expect("user_data is present")
     }
 

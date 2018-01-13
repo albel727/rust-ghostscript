@@ -6,12 +6,12 @@ use error::ErrCode;
 use gs_sys;
 use instance;
 use poll;
-use std::os::raw::c_void;
+use std::os::raw::{c_char, c_void};
 use stdio;
 
 use std::sync::Arc;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum BuilderErrorKind {
     Creation,
     ArgumentEncoding,
@@ -22,15 +22,15 @@ pub enum BuilderErrorKind {
     Initialization,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug)]
 pub struct BuilderError<T> {
     pub kind: BuilderErrorKind,
     pub code: ErrCode,
-    pub user_data: Box<T>,
+    pub user_data: T,
 }
 
 impl<T> BuilderError<T> {
-    pub fn new(kind: BuilderErrorKind, code: ErrCode, user_data: Box<T>) -> Self {
+    pub fn new(kind: BuilderErrorKind, code: ErrCode, user_data: T) -> Self {
         BuilderError {
             kind,
             code,
@@ -46,7 +46,7 @@ impl<T> BuilderError<T> {
 #[derive(Debug)]
 pub enum BuilderResult<T> {
     Running(::instance::Ghostscript<T>),
-    Quit(Box<T>),
+    Quit(T),
     Failed(BuilderError<T>),
 }
 
@@ -54,12 +54,16 @@ impl<T> BuilderResult<T> {
     pub fn running(self) -> Result<::instance::Ghostscript<T>, BuilderError<T>> {
         match self {
             BuilderResult::Running(instance) => Ok(instance),
-            BuilderResult::Quit(user_data) => Err(BuilderError::new(BuilderErrorKind::Initialization, ::error::consts::QUIT, user_data)),
+            BuilderResult::Quit(user_data) => Err(BuilderError::new(
+                BuilderErrorKind::Initialization,
+                ::error::consts::QUIT,
+                user_data,
+            )),
             BuilderResult::Failed(be) => Err(be),
         }
     }
 
-    pub fn has_quit(self) -> Result<Box<T>, Result<::instance::Ghostscript<T>, BuilderError<T>>> {
+    pub fn has_quit(self) -> Result<T, Result<::instance::Ghostscript<T>, BuilderError<T>>> {
         match self {
             BuilderResult::Quit(user_data) => Ok(user_data),
             BuilderResult::Running(instance) => Err(Ok(instance)),
@@ -68,7 +72,7 @@ impl<T> BuilderResult<T> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GhostscriptBuilder<T> {
     default_device_list: Option<device_list::DeviceList>,
     display_callback: Option<Arc<gs_sys::display::DisplayCallback>>,
@@ -213,16 +217,15 @@ impl<T> GhostscriptBuilder<T> {
     }
 
     #[cfg_attr(feature = "cargo-clippy", allow(let_unit_value))]
-    pub fn build(&self, user_data: T) -> BuilderResult<T> {
+    pub fn build<Q: ::instance::CallbackSafe<Target = T>>(&self, mut user_data: Q) -> BuilderResult<Q> {
         let lock = ::instance::lock::get_lock();
 
         let mut instance = ::std::ptr::null_mut();
-        let mut user_data = Box::new(user_data);
 
         unsafe {
             let err = {
-                let data_ptr: &mut T = user_data.as_mut();
-                gs_sys::ffi::gsapi_new_instance(&mut instance, data_ptr as *mut T as *mut c_void)
+                let data_ptr: *mut T = user_data.as_stable_mut();
+                gs_sys::ffi::gsapi_new_instance(&mut instance, data_ptr as *mut c_void)
             };
             if err != gs_sys::GS_OK {
                 return BuilderResult::Failed(BuilderError::new(
@@ -244,7 +247,7 @@ impl<T> GhostscriptBuilder<T> {
         };
 
         unsafe {
-            let err = gs_sys::ffi::gsapi_set_arg_encoding(instance.instance, Encoding::GHOSTSCRIPT_ENCODING as _);
+            let err = gs_sys::ffi::gsapi_set_arg_encoding(instance.instance, Encoding::GHOSTSCRIPT_ENCODING);
             if err != gs_sys::GS_OK {
                 return BuilderResult::Failed(BuilderError::new(
                     BuilderErrorKind::ArgumentEncoding,
@@ -320,27 +323,33 @@ impl<T> GhostscriptBuilder<T> {
             }
         }
 
-        let mut init_ptrs: Vec<*const i8> = Vec::new();
+        let mut init_ptrs: Vec<*const c_char> = Vec::new();
 
         // First parameter is always ignored, fill it with an empty one.
         let empty_arg = Encoding::from_rust_to_ffi("");
-        init_ptrs.push(empty_arg.as_ptr() as *const _);
+        init_ptrs.push(empty_arg.as_ptr());
 
         // Make second parameter be display handle, if we need one.
         // Making it last doesn't work, if args contain file names.
-        let display_handle_arg = self.display_callback.as_ref().map(|_| {
-            Encoding::from_rust_to_ffi(&Self::format_display_handle_string(
-                instance.user_data.as_ref().expect("user_data isn't None"),
-            ))
-        });
+        let display_handle_arg = {
+            self.display_callback.as_ref().map(|_| {
+                Encoding::from_rust_to_ffi(&Self::format_display_handle_string(
+                    instance
+                        .user_data
+                        .as_mut()
+                        .expect("user_data isn't None")
+                        .as_stable_mut(),
+                ))
+            })
+        };
 
         if let Some(display_handle_arg) = display_handle_arg.as_ref() {
             // Set our display handle for display callbacks to use.
-            init_ptrs.push(display_handle_arg.as_ptr() as *const _);
+            init_ptrs.push(display_handle_arg.as_ptr());
         }
 
         // Fill the rest of user arguments.
-        init_ptrs.extend(self.init_params.iter().map(|s| s.as_ptr() as *const _));
+        init_ptrs.extend(self.init_params.iter().map(|s| s.as_ptr()));
 
         unsafe {
             let err = gs_sys::ffi::gsapi_init_with_args(
@@ -373,7 +382,13 @@ impl<T> GhostscriptBuilder<T> {
         BuilderResult::Running(instance)
     }
 
-    fn format_display_handle_string(handle: &T) -> String {
-        format!("-sDisplayHandle=16#{:x}", handle as *const _ as u64)
+    fn format_display_handle_string(handle: *const T) -> String {
+        format!("-sDisplayHandle=16#{:x}", handle as u64)
+    }
+}
+
+impl GhostscriptBuilder<()> {
+    pub fn build_simple(&self) -> BuilderResult<::callback::NoCallback> {
+        self.build(::callback::NoCallback)
     }
 }

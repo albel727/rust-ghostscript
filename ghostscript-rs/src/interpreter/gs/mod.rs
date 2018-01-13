@@ -44,7 +44,7 @@ impl<'a, T: 'a> Interpreter<'a> for ::instance::Ghostscript<T> {
         let mut pexit_code: PostscriptExitCode = 0;
         let err = unsafe {
             gs_sys::ffi::gsapi_run_file(
-                self.as_raw_instance() as *mut _,
+                self.as_raw_instance(),
                 file_name.as_ptr(),
                 0,
                 &mut pexit_code,

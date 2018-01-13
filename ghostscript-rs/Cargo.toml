@@ -25,6 +25,7 @@ synchronized = ["lazy_static"]
 bitflags = "1.0.1"
 ghostscript-sys = { path = "../ghostscript-sys", version = "0.1.0" }
 log = { version = "0.4", features = ["max_level_trace", "release_max_level_warn"] }
+stable_deref_trait = "*"
 
 lazy_static = { version = "1.0", optional = true }
 

@@ -16,7 +16,7 @@ const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 
 fn file_to_images(input_file: &str, grayscale: bool, resolution: u32, start: u32, num: Option<u32>) -> Vec<grabber::RawImage> {
     let mut builder = gs::builder::GhostscriptBuilder::new();
-    let my_callback = PageGrabberDisplayCallback::new();
+    let mut my_callback = PageGrabberDisplayCallback::new();
 
     builder.with_default_device_list(Some(&["display"]));
     builder.with_display(true);
@@ -54,7 +54,12 @@ fn file_to_images(input_file: &str, grayscale: bool, resolution: u32, start: u32
 
     builder.with_init_params(&init_params);
 
-    builder.build(my_callback).has_quit().expect("Interpreter ran and quit successfully").into_pages()
+    builder
+        .build(&mut my_callback)
+        .has_quit()
+        .expect("Interpreter ran and quit successfully");
+
+    my_callback.into_pages()
 }
 
 fn is_natural_int(val: String) -> Result<(), String> {

@@ -7,6 +7,7 @@ use error::ErrCode;
 use panic::PanicCallback;
 use std::ffi::CStr;
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum RawDisplayDevice {}
 
 pub trait DisplayCallback: PanicCallback {
@@ -62,7 +63,7 @@ pub trait DisplayUpdateCallback: DisplayCallback {
 
 pub trait DisplayAllocCallback: DisplayCallback {
     unsafe fn display_memalloc(&mut self, _device: *mut RawDisplayDevice, size: usize) -> *mut ::std::os::raw::c_void {
-        use ::std::mem::size_of;
+        use std::mem::size_of;
         let size = (size + size_of::<usize>() - 1) / size_of::<usize>();
         let mut v: Vec<usize> = Vec::with_capacity(size + 1);
         let ptr = v.as_mut_ptr();
