@@ -1,4 +1,4 @@
-pub(crate) mod callbacks;
+pub(crate) mod ffi_callbacks;
 
 use callback::panic::PanicCallback;
 

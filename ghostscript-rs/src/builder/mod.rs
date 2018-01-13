@@ -73,10 +73,10 @@ impl<T> BuilderResult<T> {
 pub struct GhostscriptBuilder<T> {
     default_device_list: Option<device_list::DeviceList>,
     display_callback: Option<Arc<gs_sys::display::DisplayCallback>>,
-    poll_callback: Option<::callback::poll::callbacks::Poll>,
-    stdin_callback: Option<::callback::stdio::callbacks::Input>,
-    stdout_callback: Option<::callback::stdio::callbacks::Output>,
-    stderr_callback: Option<::callback::stdio::callbacks::Output>,
+    poll_callback: Option<::callback::poll::ffi_callbacks::Poll>,
+    stdin_callback: Option<::callback::stdio::ffi_callbacks::Input>,
+    stdout_callback: Option<::callback::stdio::ffi_callbacks::Output>,
+    stderr_callback: Option<::callback::stdio::ffi_callbacks::Output>,
     init_params: Vec<<Encoding as StringEncoding>::FfiType>,
     _pd: ::std::marker::PhantomData<T>,
 }
@@ -108,7 +108,9 @@ impl<T> GhostscriptBuilder<T> {
         if !do_it {
             self.display_callback = None;
         } else if self.display_callback.is_none() {
-            self.display_callback = Some(Arc::new(::callback::display::callbacks::new_display_callback::<T>()))
+            self.display_callback = Some(Arc::new(
+                ::callback::display::ffi_callbacks::new_display_callback::<T>(),
+            ))
         }
         self
     }
@@ -122,7 +124,7 @@ impl<T> GhostscriptBuilder<T> {
         }
         self.display_callback
             .as_mut()
-            .map(|dc| ::callback::display::callbacks::display_callback_set_update::<T>(Arc::make_mut(dc), do_it));
+            .map(|dc| ::callback::display::ffi_callbacks::display_callback_set_update::<T>(Arc::make_mut(dc), do_it));
         self
     }
 
@@ -135,7 +137,7 @@ impl<T> GhostscriptBuilder<T> {
         }
         self.display_callback
             .as_mut()
-            .map(|dc| ::callback::display::callbacks::display_callback_set_alloc::<T>(Arc::make_mut(dc), do_it));
+            .map(|dc| ::callback::display::ffi_callbacks::display_callback_set_alloc::<T>(Arc::make_mut(dc), do_it));
         self
     }
 
@@ -148,7 +150,7 @@ impl<T> GhostscriptBuilder<T> {
         }
         self.display_callback
             .as_mut()
-            .map(|dc| ::callback::display::callbacks::display_callback_set_separation::<T>(Arc::make_mut(dc), do_it));
+            .map(|dc| ::callback::display::ffi_callbacks::display_callback_set_separation::<T>(Arc::make_mut(dc), do_it));
         self
     }
 
@@ -162,7 +164,7 @@ impl<T> GhostscriptBuilder<T> {
         T: ::callback::poll::PollCallback,
     {
         if do_it {
-            self.poll_callback = Some(::callback::poll::callbacks::poll_callback::<T>);
+            self.poll_callback = Some(::callback::poll::ffi_callbacks::poll_callback::<T>);
         } else {
             self.poll_callback = None;
         }
@@ -174,7 +176,7 @@ impl<T> GhostscriptBuilder<T> {
         T: ::callback::stdio::StdioCallback,
     {
         if do_it {
-            self.stdin_callback = Some(::callback::stdio::callbacks::stdin_callback::<T>);
+            self.stdin_callback = Some(::callback::stdio::ffi_callbacks::stdin_callback::<T>);
         } else {
             self.stdin_callback = None;
         }
@@ -186,7 +188,7 @@ impl<T> GhostscriptBuilder<T> {
         T: ::callback::stdio::StdioCallback,
     {
         if do_it {
-            self.stdout_callback = Some(::callback::stdio::callbacks::stdout_callback::<T>);
+            self.stdout_callback = Some(::callback::stdio::ffi_callbacks::stdout_callback::<T>);
         } else {
             self.stdout_callback = None;
         }
@@ -198,7 +200,7 @@ impl<T> GhostscriptBuilder<T> {
         T: ::callback::stdio::StdioCallback,
     {
         if do_it {
-            self.stderr_callback = Some(::callback::stdio::callbacks::stderr_callback::<T>);
+            self.stderr_callback = Some(::callback::stdio::ffi_callbacks::stderr_callback::<T>);
         } else {
             self.stderr_callback = None;
         }

@@ -62,7 +62,8 @@ pub type DisplayCallbackPreClose = unsafe extern "C" fn(handle: *mut c_void, dev
 pub type DisplayCallbackClose = unsafe extern "C" fn(handle: *mut c_void, device: *mut DisplayRawDevice) -> c_int;
 
 pub type DisplayCallbackPreSize =
-    unsafe extern "C" fn(handle: *mut c_void, device: *mut DisplayRawDevice, width: c_int, height: c_int, raster: c_int, format: c_uint) -> c_int;
+    unsafe extern "C" fn(handle: *mut c_void, device: *mut DisplayRawDevice, width: c_int, height: c_int, raster: c_int, format: c_uint)
+        -> c_int;
 pub type DisplayCallbackSize = unsafe extern "C" fn(
     handle: *mut c_void,
     device: *mut DisplayRawDevice,
@@ -74,7 +75,8 @@ pub type DisplayCallbackSize = unsafe extern "C" fn(
 ) -> c_int;
 
 pub type DisplayCallbackSync = unsafe extern "C" fn(handle: *mut c_void, device: *mut DisplayRawDevice) -> c_int;
-pub type DisplayCallbackPage = unsafe extern "C" fn(handle: *mut c_void, device: *mut DisplayRawDevice, copies: c_int, flush: c_int) -> c_int;
+pub type DisplayCallbackPage =
+    unsafe extern "C" fn(handle: *mut c_void, device: *mut DisplayRawDevice, copies: c_int, flush: c_int) -> c_int;
 
 pub type DisplayCallbackUpdate =
     unsafe extern "C" fn(handle: *mut c_void, device: *mut DisplayRawDevice, x: c_int, y: c_int, w: c_int, h: c_int) -> c_int;

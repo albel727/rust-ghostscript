@@ -126,7 +126,12 @@ unsafe extern "C" fn display_sync<T: DisplayCallback>(handle: *mut c_void, devic
         .raw_err()
 }
 
-unsafe extern "C" fn display_page<T: DisplayCallback>(handle: *mut c_void, device: *mut DisplayRawDevice, copies: c_int, flush: c_int) -> c_int {
+unsafe extern "C" fn display_page<T: DisplayCallback>(
+    handle: *mut c_void,
+    device: *mut DisplayRawDevice,
+    copies: c_int,
+    flush: c_int,
+) -> c_int {
     catch_unwind(|| {
         debug!(
             "display_page! Handle: {:p}, Device: {:p}, Copies: {}, Flush: {}",
@@ -156,18 +161,16 @@ unsafe extern "C" fn display_update<T: DisplayUpdateCallback>(
         let cb = (handle as *mut T)
             .as_mut()
             .expect("Ghostscript callback handle is not null");
-        cb.display_update(
-            device,
-            x as usize,
-            y as usize,
-            w as usize,
-            h as usize,
-        )
+        cb.display_update(device, x as usize, y as usize, w as usize, h as usize)
     }).unwrap_or_else(|e| T::on_callback_panic(handle as *mut T, "display_update", e))
         .raw_err()
 }
 
-unsafe extern "C" fn display_memalloc<T: DisplayAllocCallback>(handle: *mut c_void, device: *mut DisplayRawDevice, size: c_ulong) -> *mut c_void {
+unsafe extern "C" fn display_memalloc<T: DisplayAllocCallback>(
+    handle: *mut c_void,
+    device: *mut DisplayRawDevice,
+    size: c_ulong,
+) -> *mut c_void {
     catch_unwind(|| {
         debug!(
             "display_memalloc! Handle: {:p}, Device: {:p}, Size: {}",
@@ -183,7 +186,11 @@ unsafe extern "C" fn display_memalloc<T: DisplayAllocCallback>(handle: *mut c_vo
     })
 }
 
-unsafe extern "C" fn display_memfree<T: DisplayAllocCallback>(handle: *mut c_void, device: *mut DisplayRawDevice, mem: *mut c_void) -> c_int {
+unsafe extern "C" fn display_memfree<T: DisplayAllocCallback>(
+    handle: *mut c_void,
+    device: *mut DisplayRawDevice,
+    mem: *mut c_void,
+) -> c_int {
     catch_unwind(|| {
         debug!(
             "display_memfree! Handle: {:p}, Device: {:p}, Mem: {:p}",

@@ -1,11 +1,11 @@
-pub(crate) mod callbacks;
+pub(crate) mod ffi_callbacks;
 pub mod consts;
 
-pub use gs_sys::display::DisplayRawDevice;
 pub use self::consts::DisplayFormat;
 use GS_OK;
-use error::ErrCode;
 use callback::panic::PanicCallback;
+use error::ErrCode;
+pub use gs_sys::display::DisplayRawDevice;
 use std::ffi::CStr;
 
 pub trait DisplayCallback: PanicCallback {

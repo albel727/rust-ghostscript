@@ -1,6 +1,6 @@
 use GS_OK;
-use error::ErrCode;
 use callback::panic::PanicCallback;
+use error::ErrCode;
 
 pub trait PollCallback: PanicCallback {
     fn poll(&mut self) -> ErrCode {
@@ -8,4 +8,4 @@ pub trait PollCallback: PanicCallback {
     }
 }
 
-pub(crate) mod callbacks;
+pub(crate) mod ffi_callbacks;
