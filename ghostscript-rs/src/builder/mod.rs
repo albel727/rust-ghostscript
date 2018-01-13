@@ -97,7 +97,10 @@ impl<T> ::std::default::Default for GhostscriptBuilder<T> {
     }
 }
 
-impl<T> GhostscriptBuilder<T> {
+impl<T> GhostscriptBuilder<T>
+where
+    T: Sized,
+{
     pub fn new() -> Self {
         GhostscriptBuilder::default()
     }
@@ -367,7 +370,10 @@ impl<T> GhostscriptBuilder<T> {
         BuilderResult::Running(instance)
     }
 
-    fn format_display_handle_string(handle: *const T) -> String {
+    fn format_display_handle_string(handle: *const T) -> String
+    where
+        T: Sized,
+    {
         format!("-sDisplayHandle=16#{:x}", handle as u64)
     }
 }
