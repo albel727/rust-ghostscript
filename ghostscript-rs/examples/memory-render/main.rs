@@ -9,7 +9,7 @@ mod grabber;
 
 use clap::{App, Arg};
 use grabber::PageGrabberDisplayCallback;
-use gs::display::DisplayFormat as DF;
+use gs::callback::display::DisplayFormat as DF;
 use std::path::Path;
 
 const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
@@ -153,7 +153,7 @@ fn main() {
     for (idx, img) in imgs.iter().enumerate() {
         let file_name: std::path::PathBuf = output_dir.join(format!("page_{}.png", idx + start as usize));
 
-        let depth_bits = gs::display::depth_bits(img.format).expect("Format of known depth");
+        let depth_bits = gs::callback::display::depth_bits(img.format).expect("Format of known depth");
         let image_type = match img.format & DF::MASK_COLORS {
             DF::COLORS_RGB => image::RGB(depth_bits),
             DF::COLORS_GRAY => image::Gray(depth_bits),

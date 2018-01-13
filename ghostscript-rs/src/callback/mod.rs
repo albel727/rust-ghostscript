@@ -1,4 +1,10 @@
 extern crate stable_deref_trait;
+
+pub mod display;
+pub mod panic;
+pub mod poll;
+pub mod stdio;
+
 use self::stable_deref_trait::StableDeref;
 use std::ops::{Deref, DerefMut};
 

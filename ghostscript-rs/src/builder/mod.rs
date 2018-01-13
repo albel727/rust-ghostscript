@@ -1,13 +1,10 @@
 use DefaultEncoding as Encoding;
 use device_list;
-use display;
 use encoding::StringEncoding;
 use error::ErrCode;
 use gs_sys;
 use instance;
-use poll;
 use std::os::raw::{c_char, c_void};
-use stdio;
 
 use std::sync::Arc;
 
@@ -76,10 +73,10 @@ impl<T> BuilderResult<T> {
 pub struct GhostscriptBuilder<T> {
     default_device_list: Option<device_list::DeviceList>,
     display_callback: Option<Arc<gs_sys::display::DisplayCallback>>,
-    poll_callback: Option<::poll::callbacks::Poll>,
-    stdin_callback: Option<::stdio::callbacks::Input>,
-    stdout_callback: Option<::stdio::callbacks::Output>,
-    stderr_callback: Option<::stdio::callbacks::Output>,
+    poll_callback: Option<::callback::poll::callbacks::Poll>,
+    stdin_callback: Option<::callback::stdio::callbacks::Input>,
+    stdout_callback: Option<::callback::stdio::callbacks::Output>,
+    stderr_callback: Option<::callback::stdio::callbacks::Output>,
     init_params: Vec<<Encoding as StringEncoding>::FfiType>,
     _pd: ::std::marker::PhantomData<T>,
 }
@@ -106,52 +103,52 @@ impl<T> GhostscriptBuilder<T> {
 
     pub fn with_display(&mut self, do_it: bool) -> &mut Self
     where
-        T: display::DisplayCallback,
+        T: ::callback::display::DisplayCallback,
     {
         if !do_it {
             self.display_callback = None;
         } else if self.display_callback.is_none() {
-            self.display_callback = Some(Arc::new(display::callbacks::new_display_callback::<T>()))
+            self.display_callback = Some(Arc::new(::callback::display::callbacks::new_display_callback::<T>()))
         }
         self
     }
 
     pub fn with_display_update(&mut self, do_it: bool) -> &mut Self
     where
-        T: display::DisplayUpdateCallback,
+        T: ::callback::display::DisplayUpdateCallback,
     {
         if do_it {
             self.with_display(true);
         }
         self.display_callback
             .as_mut()
-            .map(|dc| display::callbacks::display_callback_set_update::<T>(Arc::make_mut(dc), do_it));
+            .map(|dc| ::callback::display::callbacks::display_callback_set_update::<T>(Arc::make_mut(dc), do_it));
         self
     }
 
     pub fn with_display_alloc(&mut self, do_it: bool) -> &mut Self
     where
-        T: display::DisplayAllocCallback,
+        T: ::callback::display::DisplayAllocCallback,
     {
         if do_it {
             self.with_display(true);
         }
         self.display_callback
             .as_mut()
-            .map(|dc| display::callbacks::display_callback_set_alloc::<T>(Arc::make_mut(dc), do_it));
+            .map(|dc| ::callback::display::callbacks::display_callback_set_alloc::<T>(Arc::make_mut(dc), do_it));
         self
     }
 
     pub fn with_display_separation(&mut self, do_it: bool) -> &mut Self
     where
-        T: display::DisplaySeparationCallback,
+        T: ::callback::display::DisplaySeparationCallback,
     {
         if do_it {
             self.with_display(true);
         }
         self.display_callback
             .as_mut()
-            .map(|dc| display::callbacks::display_callback_set_separation::<T>(Arc::make_mut(dc), do_it));
+            .map(|dc| ::callback::display::callbacks::display_callback_set_separation::<T>(Arc::make_mut(dc), do_it));
         self
     }
 
@@ -162,10 +159,10 @@ impl<T> GhostscriptBuilder<T> {
 
     pub fn with_poll(&mut self, do_it: bool) -> &mut Self
     where
-        T: poll::PollCallback,
+        T: ::callback::poll::PollCallback,
     {
         if do_it {
-            self.poll_callback = Some(::poll::callbacks::poll_callback::<T>);
+            self.poll_callback = Some(::callback::poll::callbacks::poll_callback::<T>);
         } else {
             self.poll_callback = None;
         }
@@ -174,10 +171,10 @@ impl<T> GhostscriptBuilder<T> {
 
     pub fn with_stdin(&mut self, do_it: bool) -> &mut Self
     where
-        T: stdio::StdioCallback,
+        T: ::callback::stdio::StdioCallback,
     {
         if do_it {
-            self.stdin_callback = Some(::stdio::callbacks::stdin_callback::<T>);
+            self.stdin_callback = Some(::callback::stdio::callbacks::stdin_callback::<T>);
         } else {
             self.stdin_callback = None;
         }
@@ -186,10 +183,10 @@ impl<T> GhostscriptBuilder<T> {
 
     pub fn with_stdout(&mut self, do_it: bool) -> &mut Self
     where
-        T: stdio::StdioCallback,
+        T: ::callback::stdio::StdioCallback,
     {
         if do_it {
-            self.stdout_callback = Some(::stdio::callbacks::stdout_callback::<T>);
+            self.stdout_callback = Some(::callback::stdio::callbacks::stdout_callback::<T>);
         } else {
             self.stdout_callback = None;
         }
@@ -198,10 +195,10 @@ impl<T> GhostscriptBuilder<T> {
 
     pub fn with_stderr(&mut self, do_it: bool) -> &mut Self
     where
-        T: stdio::StdioCallback,
+        T: ::callback::stdio::StdioCallback,
     {
         if do_it {
-            self.stderr_callback = Some(::stdio::callbacks::stderr_callback::<T>);
+            self.stderr_callback = Some(::callback::stdio::callbacks::stderr_callback::<T>);
         } else {
             self.stderr_callback = None;
         }

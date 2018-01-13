@@ -5,7 +5,7 @@ pub use gs_sys::display::DisplayRawDevice;
 pub use self::consts::DisplayFormat;
 use GS_OK;
 use error::ErrCode;
-use panic::PanicCallback;
+use callback::panic::PanicCallback;
 use std::ffi::CStr;
 
 pub trait DisplayCallback: PanicCallback {

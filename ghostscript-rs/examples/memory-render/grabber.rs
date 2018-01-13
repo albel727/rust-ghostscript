@@ -1,6 +1,6 @@
 use gs;
-use gs::display;
-use gs::display::DisplayFormat;
+use gs::callback::display;
+use gs::callback::display::DisplayFormat;
 
 pub struct RawImage {
     pub width: u32,
@@ -53,12 +53,12 @@ impl Default for PageGrabberDisplayCallback {
     }
 }
 
-impl gs::panic::PanicCallback for PageGrabberDisplayCallback {}
+impl gs::callback::panic::PanicCallback for PageGrabberDisplayCallback {}
 
-impl gs::display::DisplayCallback for PageGrabberDisplayCallback {
+impl gs::callback::display::DisplayCallback for PageGrabberDisplayCallback {
     fn display_size(
         &mut self,
-        _device: *mut gs::display::DisplayRawDevice,
+        _device: *mut gs::callback::display::DisplayRawDevice,
         width: usize,
         height: usize,
         raster: usize,
@@ -73,7 +73,7 @@ impl gs::display::DisplayCallback for PageGrabberDisplayCallback {
         gs::GS_OK
     }
 
-    fn display_page(&mut self, _device: *mut gs::display::DisplayRawDevice, _copies: u32, _flush: bool) -> gs::error::ErrCode {
+    fn display_page(&mut self, _device: *mut gs::callback::display::DisplayRawDevice, _copies: u32, _flush: bool) -> gs::error::ErrCode {
         if self.format.contains(DisplayFormat::COLORS_SEPARATION) {
             return gs::error::consts::RANGE_CHECK;
         }

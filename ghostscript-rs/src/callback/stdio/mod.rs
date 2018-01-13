@@ -1,6 +1,6 @@
 pub(crate) mod callbacks;
 
-use panic::PanicCallback;
+use callback::panic::PanicCallback;
 
 pub trait StdioCallback: PanicCallback {
     fn read_stdin(&mut self, _buf: &mut [u8]) -> Option<usize> {
