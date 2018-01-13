@@ -58,7 +58,7 @@ impl gs::panic::PanicCallback for PageGrabberDisplayCallback {}
 impl gs::display::DisplayCallback for PageGrabberDisplayCallback {
     fn display_size(
         &mut self,
-        _device: *mut gs::display::RawDisplayDevice,
+        _device: *mut gs::display::DisplayRawDevice,
         width: usize,
         height: usize,
         raster: usize,
@@ -73,7 +73,7 @@ impl gs::display::DisplayCallback for PageGrabberDisplayCallback {
         gs::GS_OK
     }
 
-    fn display_page(&mut self, _device: *mut gs::display::RawDisplayDevice, _copies: u32, _flush: bool) -> gs::error::ErrCode {
+    fn display_page(&mut self, _device: *mut gs::display::DisplayRawDevice, _copies: u32, _flush: bool) -> gs::error::ErrCode {
         if self.format.contains(DisplayFormat::COLORS_SEPARATION) {
             return gs::error::consts::RANGE_CHECK;
         }

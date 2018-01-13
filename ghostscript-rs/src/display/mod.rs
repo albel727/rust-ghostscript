@@ -1,31 +1,29 @@
 pub(crate) mod callbacks;
-
 pub mod consts;
+
+pub use gs_sys::display::DisplayRawDevice;
 pub use self::consts::DisplayFormat;
 use GS_OK;
 use error::ErrCode;
 use panic::PanicCallback;
 use std::ffi::CStr;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub enum RawDisplayDevice {}
-
 pub trait DisplayCallback: PanicCallback {
-    fn display_open(&mut self, _device: *mut RawDisplayDevice) -> ErrCode {
+    fn display_open(&mut self, _device: *mut DisplayRawDevice) -> ErrCode {
         GS_OK
     }
 
-    fn display_preclose(&mut self, _device: *mut RawDisplayDevice) -> ErrCode {
+    fn display_preclose(&mut self, _device: *mut DisplayRawDevice) -> ErrCode {
         GS_OK
     }
 
-    fn display_close(&mut self, _device: *mut RawDisplayDevice) -> ErrCode {
+    fn display_close(&mut self, _device: *mut DisplayRawDevice) -> ErrCode {
         GS_OK
     }
 
     fn display_presize(
         &mut self,
-        _device: *mut RawDisplayDevice,
+        _device: *mut DisplayRawDevice,
         _width: usize,
         _height: usize,
         _raster: usize,
@@ -36,7 +34,7 @@ pub trait DisplayCallback: PanicCallback {
 
     fn display_size(
         &mut self,
-        _device: *mut RawDisplayDevice,
+        _device: *mut DisplayRawDevice,
         _width: usize,
         _height: usize,
         _raster: usize,
@@ -46,23 +44,23 @@ pub trait DisplayCallback: PanicCallback {
         GS_OK
     }
 
-    fn display_sync(&mut self, _device: *mut RawDisplayDevice) -> ErrCode {
+    fn display_sync(&mut self, _device: *mut DisplayRawDevice) -> ErrCode {
         GS_OK
     }
 
-    fn display_page(&mut self, _device: *mut RawDisplayDevice, _copies: u32, _flush: bool) -> ErrCode {
+    fn display_page(&mut self, _device: *mut DisplayRawDevice, _copies: u32, _flush: bool) -> ErrCode {
         GS_OK
     }
 }
 
 pub trait DisplayUpdateCallback: DisplayCallback {
-    fn display_update(&mut self, _device: *mut RawDisplayDevice, _x: usize, _y: usize, _w: usize, _h: usize) -> ErrCode {
+    fn display_update(&mut self, _device: *mut DisplayRawDevice, _x: usize, _y: usize, _w: usize, _h: usize) -> ErrCode {
         GS_OK
     }
 }
 
 pub trait DisplayAllocCallback: DisplayCallback {
-    unsafe fn display_memalloc(&mut self, _device: *mut RawDisplayDevice, size: usize) -> *mut ::std::os::raw::c_void {
+    unsafe fn display_memalloc(&mut self, _device: *mut DisplayRawDevice, size: usize) -> *mut ::std::os::raw::c_void {
         use std::mem::size_of;
         let size = (size + size_of::<usize>() - 1) / size_of::<usize>();
         let mut v: Vec<usize> = Vec::with_capacity(size + 1);
@@ -72,7 +70,7 @@ pub trait DisplayAllocCallback: DisplayCallback {
         ptr.offset(1) as *mut ::std::os::raw::c_void
     }
 
-    unsafe fn display_memfree(&mut self, _device: *mut RawDisplayDevice, mem: *mut ::std::os::raw::c_void) -> ErrCode {
+    unsafe fn display_memfree(&mut self, _device: *mut DisplayRawDevice, mem: *mut ::std::os::raw::c_void) -> ErrCode {
         let ptr = mem as *mut usize;
         let ptr = ptr.offset(-1);
         let capacity = *ptr;
@@ -85,7 +83,7 @@ pub trait DisplayAllocCallback: DisplayCallback {
 pub trait DisplaySeparationCallback: DisplayCallback {
     fn display_separation(
         &mut self,
-        _device: *mut RawDisplayDevice,
+        _device: *mut DisplayRawDevice,
         _component: u32,
         _component_name: &CStr,
         _cmyk: (u16, u16, u16, u16),
