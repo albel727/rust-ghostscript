@@ -1,4 +1,5 @@
 use super::*;
+use boolinator::Boolinator;
 use gs_sys::display as disp;
 use std::os::raw::{c_char, c_int, c_uchar, c_uint, c_ulong, c_ushort, c_void};
 use std::panic::catch_unwind;
@@ -265,21 +266,12 @@ pub fn new_display_callback<T: DisplayCallback>() -> disp::DisplayCallback {
 }
 
 pub fn display_callback_set_update<T: DisplayUpdateCallback>(cb: &mut disp::DisplayCallback, do_it: bool) {
-    cb.display_update = if do_it {
-        Some(display_update::<T> as disp::DisplayCallbackUpdate)
-    } else {
-        None
-    };
+    cb.display_update = do_it.as_some(display_update::<T> as disp::DisplayCallbackUpdate);
 }
 
 pub fn display_callback_set_alloc<T: DisplayAllocCallback>(cb: &mut disp::DisplayCallback, do_it: bool) {
-    if do_it {
-        cb.display_memalloc = Some(display_memalloc::<T> as disp::DisplayCallbackMemAlloc);
-        cb.display_memfree = Some(display_memfree::<T> as disp::DisplayCallbackMemFree);
-    } else {
-        cb.display_memalloc = None;
-        cb.display_memfree = None;
-    };
+    cb.display_memalloc = do_it.as_some(display_memalloc::<T> as disp::DisplayCallbackMemAlloc);
+    cb.display_memfree = do_it.as_some(display_memfree::<T> as disp::DisplayCallbackMemFree);
 }
 
 pub fn display_callback_set_separation<T: DisplaySeparationCallback>(cb: &mut disp::DisplayCallback, do_it: bool) {

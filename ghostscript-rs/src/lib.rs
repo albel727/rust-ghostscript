@@ -12,6 +12,7 @@
 //extern crate dbg;
 #[macro_use]
 extern crate bitflags;
+extern crate boolinator;
 #[cfg(feature = "synchronized")]
 #[macro_use]
 extern crate lazy_static;
