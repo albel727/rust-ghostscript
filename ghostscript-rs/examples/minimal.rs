@@ -50,5 +50,5 @@ fn main() {
     builder
         .build_simple()
         .has_quit()
-        .expect("Interpreter ran and quit successfully");
+        .expect("Interpreter failed to start or kept running");
 }

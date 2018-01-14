@@ -325,7 +325,7 @@ where
                     instance
                         .user_data
                         .as_mut()
-                        .expect("user_data isn't None")
+                        .expect("Bug! user_data is missing.")
                         .as_stable_mut(),
                 ))
             })

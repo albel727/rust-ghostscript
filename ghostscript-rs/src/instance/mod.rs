@@ -26,7 +26,7 @@ pub struct Ghostscript<T> {
 
 impl<T> Ghostscript<T> {
     pub fn into_inner(mut self) -> T {
-        self.user_data.take().expect("user_data is present")
+        self.user_data.take().expect("Bug! user_data is missing")
     }
 
     pub unsafe fn as_raw_instance(&mut self) -> *mut gs_sys::GsRawInstance {
@@ -50,7 +50,7 @@ impl<T> Ghostscript<T> {
 
         let s = unsafe {
             let s = ::std::slice::from_raw_parts(ptr, size as _);
-            ::std::str::from_utf8(s).expect("Device names are ASCII (or at least Unicode)")
+            ::std::str::from_utf8(s).expect("Device names aren't ASCII (or even UTF-8)")
         };
 
         Ok(DeviceList::new(s))

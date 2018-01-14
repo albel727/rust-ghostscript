@@ -1,16 +1,26 @@
 use super::*;
 use boolinator::Boolinator;
+use callback::get_cb;
 use gs_sys::display as disp;
 use std::os::raw::{c_char, c_int, c_uchar, c_uint, c_ulong, c_ushort, c_void};
 use std::panic::catch_unwind;
 
+fn get_fmt(format: c_uint) -> DisplayFormat {
+    let fmt = super::DisplayFormat::from_bits_truncate(format);
+    debug_assert_eq!(
+        fmt.bits(),
+        format,
+        "Warning, DisplayFormat contains unknown bits! Got: {:b}; Known: {:b}",
+        format,
+        fmt.bits()
+    );
+    fmt
+}
+
 unsafe extern "C" fn display_open<T: DisplayCallback>(handle: *mut c_void, device: *mut DisplayRawDevice) -> c_int {
     catch_unwind(|| {
         debug!("display_open! Handle: {:p}, Device: {:p}", handle, device);
-        let cb = (handle as *mut T)
-            .as_mut()
-            .expect("Ghostscript callback handle is not null");
-        cb.display_open(device)
+        get_cb::<T>(handle).display_open(device)
     }).unwrap_or_else(|e| T::on_callback_panic(handle as *mut T, "display_open", e))
         .raw_err()
 }
@@ -21,10 +31,7 @@ unsafe extern "C" fn display_preclose<T: DisplayCallback>(handle: *mut c_void, d
             "display_preclose! Handle: {:p}, Device: {:p}",
             handle, device
         );
-        let cb = (handle as *mut T)
-            .as_mut()
-            .expect("Ghostscript callback handle is not null");
-        cb.display_preclose(device)
+        get_cb::<T>(handle).display_preclose(device)
     }).unwrap_or_else(|e| T::on_callback_panic(handle as *mut T, "display_preclose", e))
         .raw_err()
 }
@@ -32,10 +39,7 @@ unsafe extern "C" fn display_preclose<T: DisplayCallback>(handle: *mut c_void, d
 unsafe extern "C" fn display_close<T: DisplayCallback>(handle: *mut c_void, device: *mut DisplayRawDevice) -> c_int {
     catch_unwind(|| {
         debug!("display_close! Handle: {:p}, Device: {:p}", handle, device);
-        let cb = (handle as *mut T)
-            .as_mut()
-            .expect("Ghostscript callback handle is not null");
-        cb.display_close(device)
+        get_cb::<T>(handle).display_close(device)
     }).unwrap_or_else(|e| T::on_callback_panic(handle as *mut T, "display_close", e))
         .raw_err()
 }
@@ -53,25 +57,13 @@ unsafe extern "C" fn display_presize<T: DisplayCallback>(
             "display_presize! Handle: {:p}, Device: {:p}, W: {}, H: {}, Raster: {}, Format: {:x}",
             handle, device, width, height, raster, format
         );
-        let cb = (handle as *mut T)
-            .as_mut()
-            .expect("Ghostscript callback handle is not null");
 
-        let fmt = super::DisplayFormat::from_bits_truncate(format);
-        debug_assert_eq!(
-            fmt.bits(),
-            format,
-            "Warning, DisplayFormat contains unknown bits! Got: {:b}; Known: {:b}",
-            format,
-            fmt.bits()
-        );
-
-        cb.display_presize(
+        get_cb::<T>(handle).display_presize(
             device,
             width as usize,
             height as usize,
             raster as usize,
-            fmt,
+            get_fmt(format),
         )
     }).unwrap_or_else(|e| T::on_callback_panic(handle as *mut T, "display_presize", e))
         .raw_err()
@@ -91,25 +83,13 @@ unsafe extern "C" fn display_size<T: DisplayCallback>(
             "display_size! Handle: {:p}, Device: {:p}, W: {}, H: {}, Raster: {}, Format: {:x}, Pimage: {:p}",
             handle, device, width, height, raster, format, pimage
         );
-        let cb = (handle as *mut T)
-            .as_mut()
-            .expect("Ghostscript callback handle is not null");
 
-        let fmt = super::DisplayFormat::from_bits_truncate(format);
-        debug_assert_eq!(
-            fmt.bits(),
-            format,
-            "Warning, DisplayFormat contains unknown bits! Got: {:b}; Known: {:b}",
-            format,
-            fmt.bits()
-        );
-
-        cb.display_size(
+        get_cb::<T>(handle).display_size(
             device,
             width as usize,
             height as usize,
             raster as usize,
-            fmt,
+            get_fmt(format),
             pimage as *mut u8,
         )
     }).unwrap_or_else(|e| T::on_callback_panic(handle as *mut T, "display_size", e))
@@ -119,10 +99,7 @@ unsafe extern "C" fn display_size<T: DisplayCallback>(
 unsafe extern "C" fn display_sync<T: DisplayCallback>(handle: *mut c_void, device: *mut DisplayRawDevice) -> c_int {
     catch_unwind(|| {
         debug!("display_sync! Handle: {:p}, Device: {:p}", handle, device);
-        let cb = (handle as *mut T)
-            .as_mut()
-            .expect("Ghostscript callback handle is not null");
-        cb.display_sync(device)
+        get_cb::<T>(handle).display_sync(device)
     }).unwrap_or_else(|e| T::on_callback_panic(handle as *mut T, "display_sync", e))
         .raw_err()
 }
@@ -138,10 +115,7 @@ unsafe extern "C" fn display_page<T: DisplayCallback>(
             "display_page! Handle: {:p}, Device: {:p}, Copies: {}, Flush: {}",
             handle, device, copies, flush
         );
-        let cb = (handle as *mut T)
-            .as_mut()
-            .expect("Ghostscript callback handle is not null");
-        cb.display_page(device, copies as _, flush != 0)
+        get_cb::<T>(handle).display_page(device, copies as _, flush != 0)
     }).unwrap_or_else(|e| T::on_callback_panic(handle as *mut T, "display_page", e))
         .raw_err()
 }
@@ -159,10 +133,7 @@ unsafe extern "C" fn display_update<T: DisplayUpdateCallback>(
             "display_update! Handle: {:p}, Device: {:p}, X: {}, Y: {}, W: {}, H: {}",
             handle, device, x, y, w, h
         );
-        let cb = (handle as *mut T)
-            .as_mut()
-            .expect("Ghostscript callback handle is not null");
-        cb.display_update(device, x as usize, y as usize, w as usize, h as usize)
+        get_cb::<T>(handle).display_update(device, x as usize, y as usize, w as usize, h as usize)
     }).unwrap_or_else(|e| T::on_callback_panic(handle as *mut T, "display_update", e))
         .raw_err()
 }
@@ -177,10 +148,7 @@ unsafe extern "C" fn display_memalloc<T: DisplayAllocCallback>(
             "display_memalloc! Handle: {:p}, Device: {:p}, Size: {}",
             handle, device, size
         );
-        let cb = (handle as *mut T)
-            .as_mut()
-            .expect("Ghostscript callback handle is not null");
-        cb.display_memalloc(device, size as usize)
+        get_cb::<T>(handle).display_memalloc(device, size as usize)
     }).unwrap_or_else(|e| {
         T::on_callback_panic(handle as *mut T, "display_memalloc", e);
         ::std::ptr::null_mut()
@@ -197,10 +165,7 @@ unsafe extern "C" fn display_memfree<T: DisplayAllocCallback>(
             "display_memfree! Handle: {:p}, Device: {:p}, Mem: {:p}",
             handle, device, mem
         );
-        let cb = (handle as *mut T)
-            .as_mut()
-            .expect("Ghostscript callback handle is not null");
-        cb.display_memfree(device, mem)
+        get_cb::<T>(handle).display_memfree(device, mem)
     }).unwrap_or_else(|e| T::on_callback_panic(handle as *mut T, "display_memfree", e))
         .raw_err()
 }
@@ -231,10 +196,7 @@ unsafe extern "C" fn display_separation<T: DisplaySeparationCallback>(
             y,
             k
         );
-        let cb = (handle as *mut T)
-            .as_mut()
-            .expect("Ghostscript callback handle is not null");
-        cb.display_separation(
+        get_cb::<T>(handle).display_separation(
             device,
             component as u32,
             component_name,

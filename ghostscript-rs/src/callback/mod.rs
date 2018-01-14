@@ -39,3 +39,12 @@ impl<T, Q: StableDeref<Target = T> + DerefMut<Target = T>> CallbackSafe for Q {
         self.deref_mut()
     }
 }
+
+unsafe fn get_cb<'a, T>(handle: *mut ::std::os::raw::c_void) -> &'a mut T
+where
+    T: Sized,
+{
+    (handle as *mut T)
+        .as_mut()
+        .expect("Ghostscript callback handle is null")
+}

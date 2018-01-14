@@ -10,6 +10,6 @@ impl ::encoding::StringEncoding for Utf8 {
     type FfiType = CString;
 
     fn from_rust_to_ffi<S: AsRef<Self::RustType>>(s: S) -> Self::FfiType {
-        CString::new(s.as_ref()).expect("Init args don't contain nul characters")
+        CString::new(s.as_ref()).expect("Init args contain nul characters")
     }
 }

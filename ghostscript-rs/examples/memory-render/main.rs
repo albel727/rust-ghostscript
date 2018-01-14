@@ -57,7 +57,7 @@ fn file_to_images(input_file: &str, grayscale: bool, resolution: u32, start: u32
     builder
         .build(&mut my_callback)
         .has_quit()
-        .expect("Interpreter ran and quit successfully");
+        .expect("Interpreter failed to start or kept running");
 
     my_callback.into_pages()
 }
@@ -148,12 +148,12 @@ fn main() {
 
     let imgs = file_to_images(file_name, grayscale, dpi, start, num);
 
-    std::fs::create_dir_all(output_dir).expect("Was able to create output directory hierarchy");
+    std::fs::create_dir_all(output_dir).expect("Unable to create output directory");
 
     for (idx, img) in imgs.iter().enumerate() {
         let file_name: std::path::PathBuf = output_dir.join(format!("page_{}.png", idx + start as usize));
 
-        let depth_bits = gs::callback::display::depth_bits(img.format).expect("Format of known depth");
+        let depth_bits = gs::callback::display::depth_bits(img.format).expect("Format of unknown depth");
         let image_type = match img.format & DF::MASK_COLORS {
             DF::COLORS_RGB => image::RGB(depth_bits),
             DF::COLORS_GRAY => image::Gray(depth_bits),
@@ -166,6 +166,6 @@ fn main() {
             panic!("File already exists: {:?}", file_name);
         }
 
-        image::save_buffer(&file_name, &img.data, img.width, img.height, image_type).expect("Encoded image successfully");
+        image::save_buffer(&file_name, &img.data, img.width, img.height, image_type).expect("Failed to save image");
     }
 }
